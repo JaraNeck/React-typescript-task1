@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Country } from "../types/country";
 import { getCountries } from "../api/service";
 import CountryCard from "./CountryCard";
@@ -6,12 +6,14 @@ import CountryCard from "./CountryCard";
 const CountryList: React.FC = () => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<Country[]>([]);
+  const [originalCountries, setOriginalCountries] = useState<Country[]>([]);
 
   useEffect(() => {
     const loadCountries = async () => {
       try {
         const data: Country[] = await getCountries();
         setCountries(data);
+        setOriginalCountries(data);
       } catch (err) {
         alert(err);
       }
@@ -43,6 +45,16 @@ const CountryList: React.FC = () => {
     }
   };
 
+  const returnCountries = useMemo(() => {
+    return originalCountries.filter(
+      (originalCountry) =>
+        !selectedCountries.some(
+          (selectedCountry) =>
+            selectedCountry.name.common === originalCountry.name.common
+        )
+    );
+  }, [selectedCountries, originalCountries]);
+
   return (
     <div>
       <h2 className="text-4xl font-bold">Favorite Countries</h2>
@@ -59,7 +71,7 @@ const CountryList: React.FC = () => {
       </div>
       <h2 className="text-4xl font-bold">Countries</h2>
       <div className="country-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {countries.map((country: Country) => {
+        {returnCountries.map((country: Country) => {
           return (
             <CountryCard
               key={country.name.common}
